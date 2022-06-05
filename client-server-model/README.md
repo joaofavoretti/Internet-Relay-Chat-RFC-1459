@@ -69,3 +69,5 @@ Depois disso você terá dois processos clientes "na mesma sala" e poderá envia
 **Exemplo de execução**
 
 Aqui está um exemplo gravado dos passos comentados de compilação e execução dos programas
+
+![Exemplo execução](./exemplo-execucao.gif.gif)
