@@ -2,6 +2,10 @@
 
 O trabalho final da disciplina de Redes de Computadores está especificado no documento `Especificacao_Trabalho_Redes_2022.pdf`.
 
+**Membros do grupo**
+- João Pedro Gavassa Favoretti (11316055)
+- Lucas Pilla Pimentel (10633328)
+
 ## Primeira entrega
 
 Na primeira entrega é necessário criar um conjunto de programas que realizam a troca de mensagens utilizando a API de sockets fornecida pelo Linux utilizando uma conexão TCP.
