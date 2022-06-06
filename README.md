@@ -74,4 +74,21 @@ Depois disso você terá dois processos clientes "na mesma sala" e poderá envia
 
 Aqui está um exemplo gravado dos passos comentados de compilação e execução dos programas
 
-![Exemplo execução](./exemplo-execucao.gif)
+![Exemplo execução](client-server-model/exemplo-execucao.gif)
+
+**Informações extras**
+
+Caso desejado, o arquivo Makefile foi feito com a opção de compilação dos programas em modo DEBUG. Nesse modo a execução exibe informações adicionais sobre conexões estabelecidas dados enviados e recebidos.
+
+Para isso utilize os seguintes comandos para compilação do programa servidor:
+
+```
+make compile-server-debug
+```
+
+E para o programa cliente:
+
+```
+make compile-client-debug
+```
+
