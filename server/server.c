@@ -7,6 +7,29 @@
 #include <string.h>
 
 
+enum MESSAGE_TYPE {
+  MESSAGE_TYPE_QUIT = 0x1,
+  MESSAGE_TYPE_PING = 0x2,
+  MESSAGE_TYPE_RETRANSMISSION = 0x4,
+};
+
+int identify_message_type(char *message)
+{
+  if (strncmp(message, "/quit", 4096) == 0)
+  {
+    return MESSAGE_TYPE_QUIT;
+  }
+  else if (strncmp(message, "/ping", 4096) == 0)
+  {
+    return MESSAGE_TYPE_PING;
+  }
+  else
+  {
+    return MESSAGE_TYPE_RETRANSMISSION;
+  }
+}
+
+
 int max(int a, int b)
 {
   return a > b ? a : b;
@@ -146,9 +169,25 @@ int main(int argc, char *argv[])
 
           read[bytes_received] = 0;
 
-          logger("Retransmitting %d bytes from client %d: %s\n", bytes_received, i, read);
+          switch(identify_message_type(read))
+          {
+            case MESSAGE_TYPE_QUIT:
+              logger("Removing client %d from channel.\n", i);
+              FD_CLR(i, &masterset);
+              FD_CLR(i, &channelset);
+              CLOSESOCKET(i);
+              break;
 
-          transmit_message(i, read, (size_t)bytes_received, &channelset, max_socket + 1);
+            case MESSAGE_TYPE_PING:
+              logger("Sending PONG to client %d.\n", i);
+              send(i, "Server: PONG", 5, 0);
+              break;
+
+            case MESSAGE_TYPE_RETRANSMISSION:
+              logger("Retransmitting %d bytes from client %d: %s\n", bytes_received, i, read);
+              transmit_message(i, read, bytes_received, &channelset, max_socket + 1);
+              break;
+          }
         }
       }
     }
