@@ -1,2 +1,0 @@
-void close_client_connecion(SOCKET client_socket, fd_set *masterset, fd_set *channelset);
-void transmit_message(SOCKET message_sender, char *message_sender_nickname, char *message, size_t message_length, fd_set *channelset, int nfds);
