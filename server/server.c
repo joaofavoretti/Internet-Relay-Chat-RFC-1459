@@ -4,24 +4,33 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+
+#define MAX_NICKNAMES 1024
 
 
 enum MESSAGE_TYPE {
   MESSAGE_TYPE_QUIT = 0x1,
   MESSAGE_TYPE_PING = 0x2,
-  MESSAGE_TYPE_RETRANSMISSION = 0x4,
+  MESSAGE_TYPE_NICKNAME = 0x4,
+  MESSAGE_TYPE_RETRANSMISSION = 0x8,
 };
 
 int identify_message_type(char *message)
 {
-  if (strncmp(message, "/quit", 4096) == 0)
+  if (strncmp(message, "/quit", strlen("/quit")) == 0)
   {
     return MESSAGE_TYPE_QUIT;
   }
-  else if (strncmp(message, "/ping", 4096) == 0)
+  else if (strncmp(message, "/ping", strlen("/ping")) == 0)
   {
     return MESSAGE_TYPE_PING;
+  }
+  else if (strncmp(message, "/nickname", strlen("/nickname")) == 0)
+  {
+    return MESSAGE_TYPE_NICKNAME;
   }
   else
   {
@@ -29,15 +38,24 @@ int identify_message_type(char *message)
   }
 }
 
-
 int max(int a, int b)
 {
   return a > b ? a : b;
 }
 
-void transmit_message(SOCKET message_sender, char *message, size_t message_length, fd_set *channelset, int nfds) {
+void close_client_connecion(SOCKET client_socket, fd_set *masterset, fd_set *channelset)
+{
+  if (ISVALIDSOCKET(client_socket))
+  {
+    FD_CLR(client_socket, masterset);
+    FD_CLR(client_socket, channelset);
+    CLOSESOCKET(client_socket);
+  }
+}
+
+void transmit_message(SOCKET message_sender, char *message_sender_nickname, char *message, size_t message_length, fd_set *channelset, int nfds) {
   char sender_boilerplate[128];
-  int boilerplate_size = sprintf(sender_boilerplate, "Client %d: ", message_sender);
+  int boilerplate_size = sprintf(sender_boilerplate, "%s: ", message_sender_nickname);
   
   for (SOCKET i = 1; i < nfds; i++) {
     if (FD_ISSET(i, channelset) && i != message_sender) {
@@ -72,8 +90,7 @@ int main(int argc, char *argv[])
 
   logger("Creating socket...\n");
   SOCKET listen_connection_socket;
-  listen_connection_socket = socket(local_address_info->ai_family, 
-                                    local_address_info->ai_socktype,
+  listen_connection_socket = socket(local_address_info->ai_family, local_address_info->ai_socktype,
                                     local_address_info->ai_protocol);
   if (!ISVALIDSOCKET(listen_connection_socket))
   {
@@ -106,6 +123,8 @@ int main(int argc, char *argv[])
 
   fd_set channelset;
   FD_ZERO(&channelset);
+  /* TODO: Talvez passar isso pra uma linked list :/ */
+  char **nicknames = (char **)calloc(MAX_NICKNAMES, sizeof(char *));
 
 
   logger("Waiting for connections...\n");
@@ -129,8 +148,6 @@ int main(int argc, char *argv[])
       {
         if (i == listen_connection_socket)
         {
-          /* Accept new pending connection */
-
           struct sockaddr_storage client_address;
           socklen_t client_len = sizeof(client_address);
 
@@ -148,22 +165,24 @@ int main(int argc, char *argv[])
 
           max_socket = max(max_socket, socket_client);
 
+          char *client_nickname = (char *)calloc(50, sizeof(char));
+          sprintf(client_nickname, "Client %d", socket_client);
+          nicknames[socket_client] = client_nickname;
+
           char address_buffer[100];
           getnameinfo((struct sockaddr *)&client_address, client_len,
                       address_buffer, sizeof(address_buffer), 0, 0, NI_NUMERICHOST);
-          logger("New connection from %s\n", address_buffer);
+          logger("New connection from %s. Using filedescriptor %d\n", address_buffer, socket_client);
         }
         else
         {
-          /* Read message sent from client i */
-
           char read[4096];
           ssize_t bytes_received = recv(i, read, 4096, 0);
           if (bytes_received < 1)
           {
-            FD_CLR(i, &masterset);
-            FD_CLR(i, &channelset);
-            CLOSESOCKET(i);
+            close_client_connecion(i, &masterset, &channelset);
+            free(nicknames[i]);
+            nicknames[i] = 0;
             continue;
           }
 
@@ -172,20 +191,26 @@ int main(int argc, char *argv[])
           switch(identify_message_type(read))
           {
             case MESSAGE_TYPE_QUIT:
-              logger("Removing client %d from channel.\n", i);
-              FD_CLR(i, &masterset);
-              FD_CLR(i, &channelset);
-              CLOSESOCKET(i);
+              logger("Removing client %d (%s) from channel.\n", i, nicknames[i]);
+              close_client_connecion(i, &masterset, &channelset);
+              free(nicknames[i]);
+              nicknames[i] = 0;
               break;
 
             case MESSAGE_TYPE_PING:
-              logger("Sending PONG to client %d.\n", i);
-              send(i, "Server: PONG", 5, 0);
+              logger("Sending PONG to client %d (%s).\n", i, nicknames[i]);
+              send(i, "Server: PONG!", 13, 0);
+              break;
+
+            case MESSAGE_TYPE_NICKNAME:
+              logger("Changing nickname of client %d (%s) to: ", i, nicknames[i]);
+              sscanf(read, "/nickname %s", nicknames[i]);
+              logger("%s\n", nicknames[i]);
               break;
 
             case MESSAGE_TYPE_RETRANSMISSION:
-              logger("Retransmitting %d bytes from client %d: %s\n", bytes_received, i, read);
-              transmit_message(i, read, bytes_received, &channelset, max_socket + 1);
+              logger("Retransmitting %d bytes from client %d (%s): %s\n", bytes_received, i, nicknames[i], read);
+              transmit_message(i, nicknames[i], read, bytes_received, &channelset, max_socket + 1);
               break;
           }
         }
@@ -195,6 +220,14 @@ int main(int argc, char *argv[])
 
   logger("Closing listening socket...\n");
   CLOSESOCKET(listen_connection_socket);
+
+  logger("Freeing variables...\n");
+  for (int i = 0; i < MAX_NICKNAMES; i++)
+  {
+    if (nicknames[i])
+      free(nicknames[i]);
+  }
+  free(nicknames);
 
   logger("Finished.\n");
 
