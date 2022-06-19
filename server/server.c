@@ -17,6 +17,7 @@ typedef struct
   char *name;
   SOCKET administrator;
   fd_set users;
+  fd_set muted_users;
 } CHANNEL;
 
 CHANNEL *find_channel(CHANNEL **channels, char *name)
@@ -46,6 +47,7 @@ CHANNEL *create_channel(CHANNEL **channels, char *name, SOCKET administrator)
       channels[i]->name = name;
       channels[i]->administrator = administrator;
       FD_ZERO(&channels[i]->users);
+      FD_ZERO(&channels[i]->muted_users);
       FD_SET(administrator, &channels[i]->users);
       return channels[i];
     }
@@ -63,6 +65,7 @@ void close_client_connection(SOCKET client_socket, fd_set *masterset, CHANNEL **
     if (channels[i] != NULL)
     {
       FD_CLR(client_socket, &channels[i]->users);
+      FD_CLR(client_socket, &channels[i]->muted_users);
       if (channels[i]->administrator == client_socket)
       {
         free(channels[i]->name);
@@ -117,7 +120,7 @@ void transmit_message_to_channels(SOCKET message_sender, char *message_sender_ni
 {
   for (int i = 0; i < MAX_CHANNELS; i++)
   {
-    if (channels[i] != NULL && FD_ISSET(message_sender, &channels[i]->users))
+    if (channels[i] != NULL && FD_ISSET(message_sender, &channels[i]->users) && !FD_ISSET(message_sender, &channels[i]->muted_users))
     {
       transmit_message(message_sender, message_sender_nickname, message, message_length, channels[i], nfds);
     }
@@ -146,6 +149,48 @@ int kick_user(SOCKET administrator, SOCKET client, CHANNEL **channels) {
     }
   }
   return 1;
+}
+
+int mute_user(SOCKET administrator, SOCKET client, CHANNEL **channels) {
+  for (int i = 0; i < MAX_CHANNELS; i++) {
+    if (channels[i] != NULL && channels[i]->administrator == administrator) {
+      if (FD_ISSET(client, &channels[i]->users)) {
+        FD_SET(client, &channels[i]->muted_users);
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+
+int unmute_user(SOCKET administrator, SOCKET client, CHANNEL **channels) {
+  for (int i = 0; i < MAX_CHANNELS; i++) {
+    if (channels[i] != NULL && channels[i]->administrator == administrator) {
+      if (FD_ISSET(client, &channels[i]->muted_users)) {
+        FD_CLR(client, &channels[i]->muted_users);
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+
+int whois_user(SOCKET administrator, SOCKET client, char **nicknames) {
+  struct sockaddr_in client_address;
+  socklen_t client_address_length = sizeof(client_address);
+  if (getpeername(client, (struct sockaddr *)&client_address, &client_address_length) < 0) {
+    return 1;
+  }
+  char ip_address[INET_ADDRSTRLEN];
+  inet_ntop(AF_INET, &client_address.sin_addr, ip_address, INET_ADDRSTRLEN);
+
+  char *nickname = nicknames[client];
+
+  char whois_message[256];
+  sprintf(whois_message, "Server: %s is connected from %s", nickname, ip_address);
+  send(administrator, whois_message, strlen(whois_message), 0);
+
+  return 0;
 }
 
 int main(int argc, char *argv[])
@@ -309,6 +354,7 @@ int main(int argc, char *argv[])
             sscanf(read, "/kick %s", nickname);
             logger("%s\n", nickname);
             user_fd = find_client(nicknames, nickname);
+            free(nickname);
             if (user_fd == -1)
             {
               send(i, "Server: Client not found!", strlen("Server: Client not found!"), 0);
@@ -320,15 +366,61 @@ int main(int argc, char *argv[])
             break;
 
           case MESSAGE_TYPE_MUTE:
+            logger("Client %d requested to mute client: ", i);
+            nickname = (char *)calloc(50, sizeof(char));
+            sscanf(read, "/mute %s", nickname);
+            logger("%s\n", nickname);
+            user_fd = find_client(nicknames, nickname);
+            free(nickname);
+            if (user_fd == -1)
+            {
+              send(i, "Server: Client not found!", strlen("Server: Client not found!"), 0);
+            }
+            else
+            {
+              mute_user(i, user_fd, channels);
+            }
 
             break;
 
           case MESSAGE_TYPE_UNMUTE:
+            logger("Client %d requested to unmute client: ", i);
+            nickname = (char *)calloc(50, sizeof(char));
+            sscanf(read, "/unmute %s", nickname);
+            logger("%s\n", nickname);
+            user_fd = find_client(nicknames, nickname);
+            free(nickname);
+            if (user_fd == -1)
+            {
+              send(i, "Server: Client not found!", strlen("Server: Client not found!"), 0);
+            }
+            else
+            {
+              unmute_user(i, user_fd, channels);
+            }
 
             break;
 
+          case MESSAGE_TYPE_WHOIS:
+            logger("Client %d requested to whois client: ", i);
+            nickname = (char *)calloc(50, sizeof(char));
+            sscanf(read, "/whois %s", nickname);
+            logger("%s\n", nickname);
+            user_fd = find_client(nicknames, nickname);
+            free(nickname);
+            if (user_fd == -1)
+            {
+              send(i, "Server: Client not found!", strlen("Server: Client not found!"), 0);
+            }
+            else
+            {
+              whois_user(i, user_fd, nicknames);
+            }
+            break;
+
           case MESSAGE_TYPE_HELP:
-            // TO BE IMPLEMENTED
+            logger("Client %d requested help.\n", i);
+            send(i, "Server: Commands\n\n/nickname <nickname> \n/join <channel> \n/kick <nickname> \n/mute <nickname> \n/unmute <nickname> \n/whois <nickname> \n/help\n", strlen("Server: Commands\n\n/nickname <nickname> \n/join <channel> \n/kick <nickname> \n/mute <nickname> \n/unmute <nickname> \n/whois <nickname> \n/help\n"), 0);
             break;
 
           case MESSAGE_TYPE_RETRANSMISSION:

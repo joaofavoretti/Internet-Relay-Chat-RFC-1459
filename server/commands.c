@@ -37,7 +37,7 @@ int identify_message_type(char *message)
   }
   else if (strncmp(message, "/whois", strlen("/whois")) == 0)
   {
-    return MESSAGE_TYPE_UNMUTE;
+    return MESSAGE_TYPE_WHOIS;
   }
   else if (strncmp(message, "/", strlen("/")) == 0)
   {
