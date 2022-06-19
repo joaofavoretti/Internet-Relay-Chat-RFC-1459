@@ -1,23 +1,23 @@
 # Makefile to compile the client-server model
 CC=gcc
 
-compile-server:
+server:
 	$(CC) -o tcp_server_chat tcp_server_chat.c
 
-compile-client:
+client:
 	$(CC) -o tcp_client_chat tcp_client.c
 
-compile-server-debug:
-	$(CC) -o tcp_server_chat -D DEBUG tcp_server_chat.c
+server-debug:
+	$(CC) -o tcp_server_chat -D DEBUG -g3 tcp_server_chat.c
 
-compile-client-debug:
-	$(CC) -o tcp_client_chat -D DEBUG tcp_client.c
+client-debug:
+	$(CC) -o tcp_client_chat -D DEBUG -g3 tcp_client.c
 
 run-server:
-	./tcp_server_chat 47783
+	./tcp_server_chat 47784
 
 run-client:
-	./tcp_client_chat localhost 47783
+	./tcp_client_chat localhost 47784
 
 clean:
 	rm -f tcp_server_chat tcp_client_chat
