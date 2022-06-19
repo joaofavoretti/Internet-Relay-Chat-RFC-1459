@@ -22,8 +22,7 @@ int main(int argc, char *argv[])
 
 
   logger("Configuring remote address...\n");
-  struct addrinfo hints;
-  memset(&hints, 0, sizeof(hints));
+  struct addrinfo hints = { 0 };
   hints.ai_socktype = SOCK_STREAM;
   struct addrinfo *server_address_info;
   if (getaddrinfo(server_ip, server_port, &hints, &server_address_info))
@@ -66,10 +65,10 @@ int main(int argc, char *argv[])
 
 
   fd_set master;
-  SOCKET max_socket = server_socket;
   FD_ZERO(&master);
   FD_SET(server_socket, &master);
   FD_SET(fileno(stdin), &master);
+  SOCKET max_socket = server_socket;
 
 
   printf("To send data, enter text followed by enter.\n");
@@ -96,8 +95,8 @@ int main(int argc, char *argv[])
         logger("Connection closed by peer.\n");
         break;
       }
-      printf("Received (%d bytes): %.*s\n",
-             bytes_received, bytes_received, read);
+      logger("Received (%d bytes)\n", bytes_received);
+      printf("%.*s\n", bytes_received, read);
     }
 
     if (FD_ISSET(fileno(stdin), &readfds))
