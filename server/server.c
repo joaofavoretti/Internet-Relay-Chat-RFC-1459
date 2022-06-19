@@ -170,9 +170,12 @@ int main(int argc, char *argv[])
           nicknames[socket_client] = client_nickname;
 
           char address_buffer[100];
-          getnameinfo((struct sockaddr *)&client_address, client_len,
-                      address_buffer, sizeof(address_buffer), 0, 0, NI_NUMERICHOST);
-          logger("New connection from %s. Using filedescriptor %d\n", address_buffer, socket_client);
+          getnameinfo((struct sockaddr *)&client_address, client_len, address_buffer,
+                      sizeof(address_buffer), 0, 0, NI_NUMERICHOST);
+          logger("New connection from %s. Using filedescriptor %d\n", address_buffer,
+                 socket_client);
+
+          send(socket_client, "Welcome to the channel!", strlen("Welcome to the channel!"), 0);
         }
         else
         {

@@ -77,17 +77,19 @@ int main(int argc, char *argv[])
   while (1)
   {
     fd_set readfds = master;
-
+  
+    printf("\r>>> ");
+    fflush(stdout);
 
     if (select(max_socket + 1, &readfds, 0, 0, 0) < 0)
     {
       fprintf(stderr, "select() failed. (%d)\n", GETSOCKETERRNO());
       return 1;
     }
-  
 
     if (FD_ISSET(server_socket, &readfds))
     {
+      printf("\r");
       char read[4096];
       int bytes_received = recv(server_socket, read, 4096, 0);
       if (bytes_received < 1)
@@ -101,6 +103,7 @@ int main(int argc, char *argv[])
 
     if (FD_ISSET(fileno(stdin), &readfds))
     {
+      printf("\r");
       char read[4096];
       if (!fgetstring(read, 4096, stdin))
         break;
