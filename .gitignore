@@ -1,3 +1,7 @@
-client/client
-server/server
 .vscode/*
+client/client
+client/*.bak
+server/server
+server/*.bak
+shared/*.bak
+*.bak

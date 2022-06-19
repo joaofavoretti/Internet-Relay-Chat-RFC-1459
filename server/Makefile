@@ -1,8 +1,8 @@
 CC=gcc
-SOURCE_FILES=server.c
+SOURCE_FILES=server.c utils.c commands.c connection.c
 PROGRAM=server
 DEBUG_FLAGS=-D DEBUG -g3
-DEFAULT_PORT=47783
+DEFAULT_PORT=47784
 
 compile:
 	$(CC) -o $(PROGRAM) $(SOURCE_FILES)

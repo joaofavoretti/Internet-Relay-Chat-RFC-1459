@@ -1,69 +1,17 @@
-#include "../shared/socket_connection.h"
-#include "../shared/logger.h"
-
-
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 
+#include "../shared/socket_connection.h"
+#include "../shared/logger.h"
+#include "utils.h"
+#include "commands.h"
+#include "connection.h"
+
+
 #define MAX_NICKNAMES 1024
-
-
-enum MESSAGE_TYPE {
-  MESSAGE_TYPE_QUIT = 0x1,
-  MESSAGE_TYPE_PING = 0x2,
-  MESSAGE_TYPE_NICKNAME = 0x4,
-  MESSAGE_TYPE_RETRANSMISSION = 0x8,
-};
-
-int identify_message_type(char *message)
-{
-  if (strncmp(message, "/quit", strlen("/quit")) == 0)
-  {
-    return MESSAGE_TYPE_QUIT;
-  }
-  else if (strncmp(message, "/ping", strlen("/ping")) == 0)
-  {
-    return MESSAGE_TYPE_PING;
-  }
-  else if (strncmp(message, "/nickname", strlen("/nickname")) == 0)
-  {
-    return MESSAGE_TYPE_NICKNAME;
-  }
-  else
-  {
-    return MESSAGE_TYPE_RETRANSMISSION;
-  }
-}
-
-int max(int a, int b)
-{
-  return a > b ? a : b;
-}
-
-void close_client_connecion(SOCKET client_socket, fd_set *masterset, fd_set *channelset)
-{
-  if (ISVALIDSOCKET(client_socket))
-  {
-    FD_CLR(client_socket, masterset);
-    FD_CLR(client_socket, channelset);
-    CLOSESOCKET(client_socket);
-  }
-}
-
-void transmit_message(SOCKET message_sender, char *message_sender_nickname, char *message, size_t message_length, fd_set *channelset, int nfds) {
-  char sender_boilerplate[128];
-  int boilerplate_size = sprintf(sender_boilerplate, "%s: ", message_sender_nickname);
-  
-  for (SOCKET i = 1; i < nfds; i++) {
-    if (FD_ISSET(i, channelset) && i != message_sender) {
-      send(i, sender_boilerplate, boilerplate_size, 0);
-      send(i, message, message_length, 0);
-    }
-  }
-}
 
 
 int main(int argc, char *argv[])

@@ -1,0 +1,9 @@
+enum MESSAGE_TYPE {
+  MESSAGE_TYPE_QUIT = 1,
+  MESSAGE_TYPE_PING = 2,
+  MESSAGE_TYPE_NICKNAME = 3,
+  MESSAGE_TYPE_JOIN = 4,
+  MESSAGE_TYPE_RETRANSMISSION = 5,
+};
+
+int identify_message_type(char *message);
