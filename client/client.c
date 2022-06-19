@@ -1,16 +1,21 @@
-#include "tcp_socket.h"
+#include "../shared/socket_connection.h"
+#include "../shared/logger.h"
+#include "fgetstring.h"
+
+
+#include <stdio.h>
+#include <string.h>
+
 
 int main(int argc, char *argv[])
 {
   char *program_name = argv[0];
-
 
   if (argc < 3)
   {
     fprintf(stderr, "Usage: ./%s server_ip server_port\n", program_name);
     return 1;
   }
-
 
   char *server_ip = argv[1];
   char *server_port = argv[2];

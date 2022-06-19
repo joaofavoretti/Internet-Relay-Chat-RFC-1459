@@ -1,6 +1,11 @@
-#include "tcp_socket.h"
+#include "../shared/socket_connection.h"
+#include "../shared/logger.h"
+
 
 #include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+
 
 int main(int argc, char *argv[])
 {

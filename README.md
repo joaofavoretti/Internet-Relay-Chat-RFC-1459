@@ -1,5 +1,7 @@
 # Redes de Computadores - Trabalho final
 
+TODO: Corrigir para a nova estrutura 
+
 O trabalho final da disciplina de Redes de Computadores está especificado no documento `Especificacao_Trabalho_Redes_2022.pdf`.
 
 **Membros do grupo**
@@ -74,7 +76,7 @@ Depois disso você terá dois processos clientes "na mesma sala" e poderá envia
 
 Aqui está um exemplo gravado dos passos comentados de compilação e execução dos programas
 
-![Exemplo execução](client-server-model/exemplo-execucao.gif)
+![Exemplo execução](./exemplo-execucao.gif)
 
 **Informações extras**
 
