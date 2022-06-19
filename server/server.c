@@ -251,6 +251,8 @@ int main(int argc, char *argv[])
   CHANNEL *channel;
   char *channel_name;
 
+  char *help_message;
+
   logger("Waiting for connections...\n");
 
   while (1)
@@ -420,7 +422,18 @@ int main(int argc, char *argv[])
 
           case MESSAGE_TYPE_HELP:
             logger("Client %d requested help.\n", i);
-            send(i, "Server: Commands\n\n/nickname <nickname> \n/join <channel> \n/kick <nickname> \n/mute <nickname> \n/unmute <nickname> \n/whois <nickname> \n/help\n", strlen("Server: Commands\n\n/nickname <nickname> \n/join <channel> \n/kick <nickname> \n/mute <nickname> \n/unmute <nickname> \n/whois <nickname> \n/help\n"), 0);
+            help_message = (char *)calloc(4096, sizeof(char));
+            sprintf(help_message, "Server commands:\n");
+            strcat(help_message, "/nickname <nickname> - change nickname\n");
+            strcat(help_message, "/join <channel> - join channel\n");
+            strcat(help_message, "/leave <channel> - leave channel\n");
+            strcat(help_message, "/kick <nickname> - kick user from channel\n");
+            strcat(help_message, "/mute <nickname> - mute user\n");
+            strcat(help_message, "/unmute <nickname> - unmute user\n");
+            strcat(help_message, "/whois <nickname> - show user information\n");
+            strcat(help_message, "/help - show this help message\n");
+            strcat(help_message, "/quit - quit server\n\n");
+            send(i, help_message, strlen(help_message), 0);
             break;
 
           case MESSAGE_TYPE_RETRANSMISSION:
