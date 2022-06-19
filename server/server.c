@@ -11,7 +11,7 @@
 #include "connection.h"
 
 
-#define MAX_NICKNAMES 1024
+#define MAX_USERS 1024
 
 
 int main(int argc, char *argv[])
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
   fd_set channelset;
   FD_ZERO(&channelset);
   /* TODO: Talvez passar isso pra uma linked list :/ */
-  char **nicknames = (char **)calloc(MAX_NICKNAMES, sizeof(char *));
+  char **nicknames = (char **)calloc(MAX_USERS, sizeof(char *));
 
 
   logger("Waiting for connections...\n");
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
   CLOSESOCKET(listen_connection_socket);
 
   logger("Freeing variables...\n");
-  for (int i = 0; i < MAX_NICKNAMES; i++)
+  for (int i = 0; i < MAX_USERS; i++)
   {
     if (nicknames[i])
       free(nicknames[i]);
