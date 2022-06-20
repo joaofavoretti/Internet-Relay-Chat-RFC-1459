@@ -11,3 +11,16 @@
 #define CLOSESOCKET(s) close(s)
 #define SOCKET int
 #define GETSOCKETERRNO() (errno)
+
+
+#define MAX_USERS 1024
+#define MAX_CHANNELS 32
+
+
+typedef struct
+{
+  char *name;
+  SOCKET administrator;
+  fd_set users;
+  fd_set muted_users;
+} CHANNEL;

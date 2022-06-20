@@ -12,3 +12,11 @@ enum MESSAGE_TYPE {
 };
 
 int identify_message_type(char *message);
+CHANNEL *find_channel(CHANNEL **channels, char *name);
+CHANNEL *create_channel(CHANNEL **channels, char *name, SOCKET administrator);
+int add_client_to_channel(CHANNEL *channel, SOCKET client);
+SOCKET find_client(char **nicknames, char *nickname);
+int kick_user(SOCKET administrator, SOCKET client, CHANNEL **channels);
+int mute_user(SOCKET administrator, SOCKET client, CHANNEL **channels);
+int unmute_user(SOCKET administrator, SOCKET client, CHANNEL **channels);
+int whois_user(SOCKET administrator, SOCKET client, char **nicknames);
