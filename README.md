@@ -2,6 +2,8 @@
 
 O trabalho final da disciplina de Redes de Computadores está especificado no documento `Especificacao_Trabalho_Redes_2022.pdf`.
 
+[Vídeo de apresentação do trabalho](https://drive.google.com/file/d/1uCw2Tvrw0r2seCpJHU83j_YFdp3WFSQ4/view?usp=sharing)
+
 **Membros do grupo**
 - João Pedro Gavassa Favoretti (11316055)
 - Lucas Pilla Pimentel (10633328)
